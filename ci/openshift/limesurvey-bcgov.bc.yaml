@@ -4,7 +4,7 @@ apiVersion: template.openshift.io/v1
 labels:
   app: "limesurvey"
 metadata:
-  name: "nrms-limesurvey-bc"
+  name: "limesurvey-bc"
 objects:
   - kind: ImageStream
     apiVersion: v1
@@ -26,7 +26,7 @@ objects:
       source:
         type: Git
         git:
-          uri: https://github.com/garywong-bc/nrm-survey
+          uri: https://github.com/bdolor/nrm-survey
         contextDir: backend
       strategy:
         type: Docker
@@ -48,10 +48,10 @@ objects:
       resources:
         limits:
           cpu: 1400m
-          memory: 500Mi
+          memory: 900Mi
         requests:
           cpu: 900m
-          memory: 400Mi
+          memory: 800Mi
       runPolicy: SerialLatestOnly
 parameters:
   - name: NAME

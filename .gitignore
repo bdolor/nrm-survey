@@ -5,3 +5,4 @@ backend/config
 backend/plugins
 backend/upload
 db/data
+.vscode

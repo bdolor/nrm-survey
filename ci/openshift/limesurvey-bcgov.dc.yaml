@@ -7,7 +7,7 @@ parameters:
   - description: The OpenShift Namespace where the ImageStream resides.
     displayName: Namespace
     name: IS_NAMESPACE
-    value: 245e18-tools
+    value: ccc866-tools
   - description: The OpenShift ImageStream name.
     displayName: Image Stream
     name: IS_NAME
@@ -15,7 +15,7 @@ parameters:
   - description: Version of LimeSurvey image to be used (e.g. v.3.16).
     displayName: Version of LimeSurvey
     name: IS_VERSION
-    value: 5.1.4
+    value: 5.3.21
   - description: The short-name of the Survey Service, lower-case with hyphen.
     displayName: LimeSurvey Acronym
     name: SURVEY_NAME

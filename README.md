@@ -149,7 +149,7 @@ $ echo ${ADMIN_PASSWORD}
 
 ## Example Deployment
 
-As a concrete example of a survey with the acronym `acme`, deployed in the project namespace `245e18-dev`, here are the steps:
+As a concrete example of a survey with the acronym `acme`, deployed in the project namespace `ccc866-dev`, here are the steps:
 
 <details><summary>Deployment Steps</summary>
 
@@ -159,9 +159,9 @@ As a concrete example of a survey with the acronym `acme`, deployed in the proje
 ❯ oc whoami
 garywong-bc@github
 
-❯ oc -n 245e18-dev new-app --file=./ci/openshift/postgresql.dc.yaml -p SURVEY_NAME=acme
+❯ oc -n ccc866-dev new-app --file=./ci/openshift/postgresql.dc.yaml -p SURVEY_NAME=acme
 
---> Deploying template "245e18-dev/nrmlimesurvey-postgresql-dc" for "./ci/openshift/postgresql.dc.yaml" to project 245e18-dev
+--> Deploying template "ccc866-dev/nrmlimesurvey-postgresql-dc" for "./ci/openshift/postgresql.dc.yaml" to project ccc866-dev
 
      * With parameters:
         * Survey Name=acme
@@ -185,12 +185,12 @@ garywong-bc@github
 After thirty seconds, the database pod should be up.
 
 ```bash
-> oc -n 245e18-dev new-app --file=./ci/openshift/limesurvey-bcgov.dc.yaml -p IS_NAMESPACE=245e18-tools -p SURVEY_NAME=acme -p ADMIN_EMAIL=King.Kong@gov.bc.ca
+> oc -n ccc866-dev new-app --file=./ci/openshift/limesurvey-bcgov.dc.yaml -p IS_NAMESPACE=ccc866-tools -p SURVEY_NAME=acme -p ADMIN_EMAIL=King.Kong@gov.bc.ca
 
---> Deploying template "245e18-dev/nrmlimesurvey-app-dc" for "./ci/openshift/limesurvey-bcgov.dc.yaml" to project 245e18-dev
+--> Deploying template "ccc866-dev/nrmlimesurvey-app-dc" for "./ci/openshift/limesurvey-bcgov.dc.yaml" to project ccc866-dev
 
      * With parameters:
-        * Namespace=245e18-tools
+        * Namespace=ccc866-tools
         * Image Stream=limesurvey-bcgov
         * Version of LimeSurvey=5.3.21
         * LimeSurvey Acronym=acme
@@ -236,7 +236,7 @@ Once logged as an Admin, you'll be brought to the Welcome page:
 
 ## Using Environmental variables to deploy
 
-As this is a template deployment, it may be easier to set environment variable for the deployment, so using the same PROJECT `245e18-dev` and SURVEY `mas-test`:
+As this is a template deployment, it may be easier to set environment variable for the deployment, so using the same PROJECT `ccc866-dev` and SURVEY `mas-test`:
 
 <details><summary>Deployment Steps</summary>
 
@@ -245,8 +245,8 @@ As this is a template deployment, it may be easier to set environment variable f
 On a workstation logged into the OpenShift Console:
 
 ```bash
-export TOOLS=245e18-tools
-export PROJECT=245e18-dev
+export TOOLS=ccc866-tools
+export PROJECT=ccc866-dev
 export SURVEY=mas-test
 ```
 
@@ -255,7 +255,7 @@ export SURVEY=mas-test
 ```bash
 > oc -n ${PROJECT} new-app --file=./ci/openshift/postgresql.dc.yaml -p SURVEY_NAME=${SURVEY}
 
---> Deploying template "245e18-dev/nrmlimesurvey-postgresql-dc" for "./ci/openshift/postgresql.dc.yaml" to project 245e18-dev
+--> Deploying template "ccc866-dev/nrmlimesurvey-postgresql-dc" for "./ci/openshift/postgresql.dc.yaml" to project ccc866-dev
 
      * With parameters:
         * Survey Name=mas-test
@@ -281,10 +281,10 @@ Wait about 30 seconds, and/or confirm via the GUI that the DB is up:
 ```bash
 > oc -n ${PROJECT} new-app --file=./ci/openshift/limesurvey-bcgov.dc.yaml -p SURVEY_NAME=${SURVEY} -p IS_NAMESPACE=${TOOLS} -p ADMIN_EMAIL=Joe.Smith@gov.bc.ca -p ADMIN_NAME="MAS LimeSurvey Administrator"
 
---> Deploying template "245e18-dev/nrmlimesurvey-app-dc" for "./ci/openshift/limesurvey-bcgov.dc.yaml" to project 245e18-dev
+--> Deploying template "ccc866-dev/nrmlimesurvey-app-dc" for "./ci/openshift/limesurvey-bcgov.dc.yaml" to project ccc866-dev
 
      * With parameters:
-        * Namespace=245e18-tools
+        * Namespace=ccc866-tools
         * Image Stream=limesurvey-bcgov
         * Version of LimeSurvey=5.3.21
         * LimeSurvey Acronym=mas-test

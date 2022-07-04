@@ -2,13 +2,28 @@
 kind: Template
 apiVersion: template.openshift.io/v1
 metadata:
-  name: nrmlimesurvey-postgresql-dc
+  name: ${NAME}-dc
 parameters:
+  - description: A descriptive name that sets a prefix and distinguishes it from other objects
+    displayName: Name 
+    name: NAME
+    required: true
+    value: limesurvey-bcgov
+  - description: A name that helps group objects related to the same app
+    displayName: App Group
+    name: APP_GROUP
+    required: true
+    value: limesurvey-psql
+  - name: TAG_NAME
+    description: Should reflect the environment where the deploymentconfig lives
+    displayName: Environment TAG name
+    required: true
+    value: dev
   - description: The short-name of the Survey Service, lower-case with hyphen.
     displayName: Survey Name
     name: SURVEY_NAME
     required: true
-    value: mds
+    value: sdd
   - description: Maximum amount of memory the container can use.
     displayName: Memory Limit
     name: MEMORY_LIMIT
@@ -18,7 +33,7 @@ parameters:
     displayName: PostgreSQL Connection Password
     from: "[a-zA-Z0-9]{16}"
     generate: expression
-    name: POSTGRESQL_PASSWORD
+    name: LS_POSTGRESQL_PASSWORD
     required: true
   - description: Volume space available for data, e.g. 512Mi, 2Gi.
     displayName: Database Volume Capacity
@@ -29,18 +44,20 @@ objects:
   - kind: Secret
     apiVersion: v1
     metadata:
-      name: "${SURVEY_NAME}limesurvey-postgresql"
+      name: "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
       labels:
-        app: "${SURVEY_NAME}limesurvey"
+        app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+        app-group: "${APP_GROUP}"
+        template: "${NAME}-deploy"
       annotations:
         description: Database credentials and name.
         template.openshift.io/expose-database_name: "{.data['database-name']}"
         template.openshift.io/expose-password: "{.data['database-password']}"
         template.openshift.io/expose-username: "{.data['database-user']}"
     stringData:
-      database-name: "${SURVEY_NAME}"
-      database-password: "${POSTGRESQL_PASSWORD}"
-      database-user: "${SURVEY_NAME}"
+      database-name: "${NAME}"
+      database-password: "${LS_POSTGRESQL_PASSWORD}"
+      database-user: "${NAME}"
   - kind: PersistentVolumeClaim
     apiVersion: v1
     metadata:
@@ -109,7 +126,7 @@ objects:
                     secretKeyRef:
                       name: "${SURVEY_NAME}limesurvey-postgresql"
                       key: database-name
-                - name: POSTGRESQL_PASSWORD
+                - name: LS_POSTGRESQL_PASSWORD
                   valueFrom:
                     secretKeyRef:
                       name: "${SURVEY_NAME}limesurvey-postgresql"

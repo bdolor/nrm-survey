@@ -8,15 +8,15 @@ parameters:
     displayName: Name 
     name: NAME
     required: true
-    value: limesurvey-bcgov
+    value: marketplace
   - description: A name that helps group objects related to the same app
     displayName: App Group
     name: APP_GROUP
     required: true
     value: limesurvey-psql
-  - name: TAG_NAME
-    description: Should reflect the environment where the deploymentconfig lives
+  - description: Should reflect the environment where the deploymentconfig lives
     displayName: Environment TAG name
+    name: TAG_NAME
     required: true
     value: dev
   - description: The short-name of the Survey Service, lower-case with hyphen.
@@ -39,7 +39,12 @@ parameters:
     displayName: Database Volume Capacity
     name: DB_VOLUME_CAPACITY
     required: true
-    value: 1Gi
+    value: 2Gi
+  - description: Block storage has a high performance and appropriate for transactional databases
+    displayName: Persistent Volume Class name
+    name: PERSISTENT_VOLUME_CLASS
+    required: false
+    value: netapp-block-standard
 objects:
   - kind: Secret
     apiVersion: v1
@@ -61,16 +66,18 @@ objects:
   - kind: PersistentVolumeClaim
     apiVersion: v1
     metadata:
-      name: "${SURVEY_NAME}limesurvey-postgresql"
+      name: "${NAME}-${APP_GROUP}-${TAG_NAME}-data"
       labels:
-        app: "${SURVEY_NAME}limesurvey"
+        app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+        app-group: "${APP_GROUP}"
+        template: "${NAME}-deploy"
     spec:
       accessModes:
         - ReadWriteOnce
       resources:
         requests:
           storage: "${DB_VOLUME_CAPACITY}"
-      storageClassName: netapp-file-standard
+      storageClassName: "${PERSISTENT_VOLUME_CLASS}"
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:

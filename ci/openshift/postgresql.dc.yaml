@@ -45,6 +45,7 @@ parameters:
     name: PERSISTENT_VOLUME_CLASS
     required: false
     value: netapp-block-standard
+
 objects:
   - kind: Secret
     apiVersion: v1
@@ -53,7 +54,7 @@ objects:
       labels:
         app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
         app-group: "${APP_GROUP}"
-        template: "${NAME}-deploy"
+        template: "${NAME}-dc"
       annotations:
         description: Database credentials and name.
         template.openshift.io/expose-database_name: "{.data['database-name']}"
@@ -63,6 +64,7 @@ objects:
       database-name: "${NAME}"
       database-password: "${LS_POSTGRESQL_PASSWORD}"
       database-user: "${NAME}"
+
   - kind: PersistentVolumeClaim
     apiVersion: v1
     metadata:
@@ -70,7 +72,7 @@ objects:
       labels:
         app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
         app-group: "${APP_GROUP}"
-        template: "${NAME}-deploy"
+        template: "${NAME}-dc"
     spec:
       accessModes:
         - ReadWriteOnce
@@ -78,12 +80,15 @@ objects:
         requests:
           storage: "${DB_VOLUME_CAPACITY}"
       storageClassName: "${PERSISTENT_VOLUME_CLASS}"
+
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
-      name: "${SURVEY_NAME}limesurvey-postgresql"
+      name:  "${NAME}-${APP_GROUP}-${TAG_NAME}"
       labels:
-        app: "${SURVEY_NAME}limesurvey"
+        app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+        app-group: "${APP_GROUP}"
+        template: "${NAME}-dc"
       annotations: {}
     spec:
       strategy:
@@ -98,7 +103,7 @@ objects:
           imageChangeParams:
             automatic: true
             containerNames:
-              - "${SURVEY_NAME}limesurvey-postgresql"
+              - "${NAME}-${APP_GROUP}-${TAG_NAME}"
             from:
               kind: ImageStreamTag
               namespace: openshift
@@ -107,22 +112,22 @@ objects:
       revisionHistoryLimit: 10
       test: false
       selector:
-        app: "${SURVEY_NAME}limesurvey"
-        deploymentconfig: "${SURVEY_NAME}limesurvey-postgresql"
+        app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+        deploymentconfig: "${NAME}-${APP_GROUP}-${TAG_NAME}"
       template:
         metadata:
           creationTimestamp:
           labels:
-            app: "${SURVEY_NAME}limesurvey"
-            deploymentconfig: "${SURVEY_NAME}limesurvey-postgresql"
+            app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+            deploymentconfig: "${NAME}-${APP_GROUP}-${TAG_NAME}"
           annotations: {}
         spec:
           volumes:
             - name: postgresql-volume
               persistentVolumeClaim:
-                claimName: "${SURVEY_NAME}limesurvey-postgresql"
+                claimName: "${NAME}-${APP_GROUP}-${TAG_NAME}-data"
           containers:
-            - name: "${SURVEY_NAME}limesurvey-postgresql"
+            - name: "${NAME}-${APP_GROUP}-${TAG_NAME}"
               image: " "
               ports:
                 - containerPort: 5432
@@ -131,24 +136,24 @@ objects:
                 - name: POSTGRESQL_DATABASE
                   valueFrom:
                     secretKeyRef:
-                      name: "${SURVEY_NAME}limesurvey-postgresql"
+                      name: "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
                       key: database-name
                 - name: LS_POSTGRESQL_PASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name: "${SURVEY_NAME}limesurvey-postgresql"
+                      name: "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
                       key: database-password
                 - name: POSTGRESQL_USER
                   valueFrom:
                     secretKeyRef:
-                      name: "${SURVEY_NAME}limesurvey-postgresql"
+                      name: "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
                       key: database-user
               resources:
                 limits:
                   memory: "${MEMORY_LIMIT}"
               volumeMounts:
                 - name: postgresql-volume
-                  mountPath: "/var/lib/pgsql/data"
+                  mountPath: "/var/lib/pgsql/ls-data"
               livenessProbe:
                 initialDelaySeconds: 30
                 tcpSocket:
@@ -175,7 +180,7 @@ objects:
     metadata:
       name: "${SURVEY_NAME}limesurvey-postgresql"
       labels:
-        app: "${SURVEY_NAME}limesurvey"
+        app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
       annotations: {}
     spec:
       ports:
@@ -184,8 +189,8 @@ objects:
           port: 5432
           targetPort: 5432
       selector:
-        app: "${SURVEY_NAME}limesurvey"
-        deploymentconfig: "${SURVEY_NAME}limesurvey-postgresql"
+        app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+        deploymentconfig: "${NAME}-${APP_GROUP}-${TAG_NAME}"
       type: ClusterIP
       sessionAffinity: None
     status:

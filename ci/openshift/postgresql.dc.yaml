@@ -2,7 +2,7 @@
 kind: Template
 apiVersion: template.openshift.io/v1
 metadata:
-  name: ${NAME}-dc
+  name: "${NAME}-dc"
   annotations:
     description: Deployment template for a PostgreSQL server with persistent storage for LimeSurvey.
     tags: "${NAME}-${APP_GROUP}-${TAG_NAME}"
@@ -79,7 +79,7 @@ objects:
                 limits:
                   memory: "${MEMORY_LIMIT}"
               volumeMounts:
-                - name: postgresql-volume
+                - name: "${NAME}-${APP_GROUP}-${TAG_NAME}-volume"
                   mountPath: "/var/lib/pgsql/ls-data"
               livenessProbe:
                 initialDelaySeconds: 30
@@ -143,7 +143,7 @@ objects:
       name: "${NAME}-${APP_GROUP}-${TAG_NAME}"
       labels:
         app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
-        app-group: $"{APP_GROUP}"
+        app-group: "${APP_GROUP}"
         template: ${NAME}-dc
       annotations: {}
     spec:
@@ -165,7 +165,7 @@ parameters:
     displayName: Name 
     name: NAME
     required: true
-    value: ls-psql
+    value: postgresql
   - description: A name that helps group objects related to the same app
     displayName: App Group
     name: APP_GROUP

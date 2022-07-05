@@ -2,7 +2,7 @@
 kind: Template
 apiVersion: template.openshift.io/v1
 metadata:
-  name: "${NAME}-dc"
+  name: "${NAME}-deployment"
   annotations:
     description: Deployment template for a PostgreSQL server with persistent storage for LimeSurvey.
     tags: "${NAME}-${APP_GROUP}-${TAG_NAME}"
@@ -15,7 +15,7 @@ objects:
       labels:
         app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
         app-group: "${APP_GROUP}"
-        template: "${NAME}-dc"
+        template: "${NAME}-deployment"
       annotations: {}
     spec:
       strategy:
@@ -65,7 +65,7 @@ objects:
                     secretKeyRef:
                       name: "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
                       key: database-name
-                - name: LS_POSTGRESQL_PASSWORD
+                - name: POSTGRESQL_PASSWORD
                   valueFrom:
                     secretKeyRef:
                       name: "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
@@ -110,7 +110,7 @@ objects:
       labels:
         app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
         app-group: "${APP_GROUP}"
-        template: "${NAME}-dc"
+        template: "${NAME}-deployment"
       annotations:
         description: Database credentials and name.
         template.openshift.io/expose-database_name: "{.data['database-name']}"
@@ -118,7 +118,7 @@ objects:
         template.openshift.io/expose-username: "{.data['database-user']}"
     stringData:
       database-name: "${NAME}"
-      database-password: "${LS_POSTGRESQL_PASSWORD}"
+      database-password: "${POSTGRESQL_PASSWORD}"
       database-user: "${NAME}"
 
   - kind: PersistentVolumeClaim
@@ -128,7 +128,7 @@ objects:
       labels:
         app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
         app-group: "${APP_GROUP}"
-        template: "${NAME}-dc"
+        template: "${NAME}-deployment"
     spec:
       accessModes:
         - ReadWriteOnce
@@ -144,7 +144,7 @@ objects:
       labels:
         app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
         app-group: "${APP_GROUP}"
-        template: ${NAME}-dc
+        template: ${NAME}-deployment
       annotations: {}
     spec:
       ports:
@@ -166,37 +166,44 @@ parameters:
     name: NAME
     required: true
     value: postgresql
+
   - description: A name that helps group objects related to the same app
     displayName: App Group
     name: APP_GROUP
     required: true
     value: limesurvey
+
   - description: Should reflect the environment where the deploymentconfig lives
     displayName: Environment TAG name
     name: TAG_NAME
     required: true
     value: dev
+    
   - description: The short-name of the Survey Service, lower-case with hyphen.
     displayName: Survey Name
     name: SURVEY_NAME
     required: true
     value: sdd
+
   - description: Maximum amount of memory the container can use.
     displayName: Memory Limit
     name: MEMORY_LIMIT
     required: true
     value: 512Mi
+
   - description: Password for the PostgreSQL connection user.
     displayName: PostgreSQL Connection Password
     from: "[a-zA-Z0-9]{16}"
     generate: expression
-    name: LS_POSTGRESQL_PASSWORD
+    name: POSTGRESQL_PASSWORD
     required: true
+
   - description: Volume space available for data, e.g. 512Mi, 2Gi.
     displayName: Database Volume Capacity
     name: DB_VOLUME_CAPACITY
     required: true
     value: 2Gi
+
   - description: Block storage has a high performance and appropriate for transactional databases
     displayName: Persistent Volume Class name
     name: PERSISTENT_VOLUME_CLASS

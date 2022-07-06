@@ -36,8 +36,8 @@ objects:
               - "${NAME}-${APP_GROUP}-${TAG_NAME}"
             from:
               kind: ImageStreamTag
-              namespace: "${NAMESPACE}"
-              name: "${NAME}:${LS_VERSION}"
+              namespace: "${IS_NAMESPACE}"
+              name: "${IS_NAME}:${IS_VERSION}"
       replicas: "${{REPLICA_MIN}}"
       revisionHistoryLimit: 10
       test: false
@@ -277,14 +277,25 @@ objects:
 parameters:
   - description: The OpenShift Namespace where the ImageStream resides.
     displayName: Namespace
-    name: NAMESPACE
+    name: IS_NAMESPACE
     value: ccc866-tools
-
+  
   - description: The OpenShift ImageStream name.
     displayName: Image Stream
+    name: IS_NAME
+    required: true
+    value: limesurvey
+  
+  - description: Version of LimeSurvey image to be used (e.g. v.3.16).
+    displayName: Version of LimeSurvey
+    name: IS_VERSION
+    value: 5.3.21
+
+  - description: The Application name.
+    displayName: Application Name
     name: NAME
     required: true
-    value: ls-app
+    value: app
 
   - description: A name that helps group objects related to the same app
     displayName: App Group
@@ -292,10 +303,10 @@ parameters:
     required: true
     value: limesurvey
 
-  - description: Version of LimeSurvey image to be used (e.g. v.3.16).
-    displayName: Version of LimeSurvey
-    name: LS_VERSION
-    value: 5.3.21
+  - name: TAG_NAME
+    displayName: Environment TAG name
+    required: true
+    value: dev
 
   - description: The short-name of the Survey Service, lower-case with hyphen.
     displayName: LimeSurvey Acronym

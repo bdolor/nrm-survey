@@ -24,17 +24,6 @@ objects:
           timeoutSeconds: 600
         resources: {}
         activeDeadlineSeconds: 21600
-      triggers:
-        - type: ConfigChange
-        - type: ImageChange
-          imageChangeParams:
-            automatic: true
-            containerNames:
-              - "${NAME}-${APP_GROUP}-${TAG_NAME}"
-            from:
-              kind: ImageStreamTag
-              namespace: openshift
-              name: postgresql:14.4
       replicas: 1
       revisionHistoryLimit: 10
       test: false
@@ -55,9 +44,9 @@ objects:
                 claimName: "${NAME}-${APP_GROUP}-${TAG_NAME}-data"
           containers:
             - name: "${NAME}-${APP_GROUP}-${TAG_NAME}"
-              image: " "
+              image: "image-registry.openshift-image-registry.svc:5000/openshift/postgresql:12"
               ports:
-                - containerPort: 5432
+                - containerPort: 5433
                   protocol: TCP
               env:
                 - name: POSTGRESQL_DATABASE
@@ -80,23 +69,26 @@ objects:
                   memory: "${MEMORY_LIMIT}"
               volumeMounts:
                 - name: "${NAME}-${APP_GROUP}-${TAG_NAME}-volume"
-                  mountPath: "/var/lib/pgsql/ls-data"
+                  mountPath: "/var/lib/pgsql/data/limesurvey"
               livenessProbe:
                 initialDelaySeconds: 30
                 tcpSocket:
-                  port: 5432
+                  port: 5433
                 timeoutSeconds: 1
               readinessProbe:
                 exec:
                   command:
                     - "/bin/bash"
                     - "-c"
-                    - pg_isready -h localhost -p 5432
-                initialDelaySeconds: 20
+                    - pg_isready -h localhost -p 5433
+                initialDelaySeconds: 5
                 timeoutSeconds: 1
+                periodSeconds: 10
+                successThreshold: 1
+                failureThreshold: 3
               terminationMessagePath: "/dev/termination-log"
               terminationMessagePolicy: File
-              imagePullPolicy: Always
+              imagePullPolicy: IfNotPresent
           restartPolicy: Always
           terminationGracePeriodSeconds: 30
           dnsPolicy: ClusterFirst
@@ -150,8 +142,8 @@ objects:
       ports:
         - name: "${NAME}-${APP_GROUP}-${TAG_NAME}"
           protocol: TCP
-          port: 5432
-          targetPort: 5432
+          port: 5433
+          targetPort: 5433
       selector:
         app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
         deploymentconfig: "${NAME}-${APP_GROUP}-${TAG_NAME}"

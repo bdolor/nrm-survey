@@ -5,7 +5,7 @@ metadata:
   annotations:
     description: Deployment template for a PostgreSQL server with persistent storage.
     tags: "${NAME}-${APP_GROUP}-${TAG_NAME}"
-  name: "${NAME}-deploy"
+  name: "${NAME}-deployment"
 
 objects:
   - kind: DeploymentConfig
@@ -75,42 +75,42 @@ objects:
                 - name: ADMIN_USER
                   valueFrom:
                     secretKeyRef:
-                      name:  "${NAME}-${APP_GROUP}-${TAG_NAME}"
+                      name:  "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
                       key: admin-user
                 - name: ADMIN_NAME
                   valueFrom:
                     secretKeyRef:
-                      name:  "${NAME}-${APP_GROUP}-${TAG_NAME}"
+                      name:  "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
                       key: admin-name
                 - name: ADMIN_PASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name:  "${NAME}-${APP_GROUP}-${TAG_NAME}"
+                      name:  "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
                       key: admin-password
                 - name: ADMIN_EMAIL
                   valueFrom:
                     secretKeyRef:
-                      name:  "${NAME}-${APP_GROUP}-${TAG_NAME}"
+                      name:  "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
                       key: admin-email
                 - name: DB_TYPE
                   value: "${DB_TYPE}"
                 - name: POSTGRESQL_USERNAME
                   valueFrom:
                     secretKeyRef:
-                      name: "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
+                      name: "postgresql-${APP_GROUP}-${TAG_NAME}-secret"
                       key: database-user
                 - name: POSTGRESQL_PASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name: "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
+                      name: "postgresql-${APP_GROUP}-${TAG_NAME}-secret"
                       key: database-password
                 - name: POSTGRESQL_DB_NAME
                   valueFrom:
                     secretKeyRef:
-                      name: "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
+                      name: "postgresql-${APP_GROUP}-${TAG_NAME}-secret"
                       key: database-name
                 - name: POSTGRESQL_DB_HOST
-                  value: "${SURVEY_NAME}-limesurvey-postgresql"
+                  value: "postgresql-${APP_GROUP}-${TAG_NAME}"
                 - name: POSTGRESQL_PORT
                   value: "5432"
               resources:

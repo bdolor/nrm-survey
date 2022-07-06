@@ -24,6 +24,17 @@ objects:
           timeoutSeconds: 600
         resources: {}
         activeDeadlineSeconds: 21600
+      triggers:
+        - type: ConfigChange
+        - type: ImageChange
+          imageChangeParams:
+            automatic: true
+            containerNames:
+              - "${NAME}-${APP_GROUP}-${TAG_NAME}"
+            from:
+              kind: ImageStreamTag
+              namespace: openshift
+              name: postgresql:12
       replicas: 1
       revisionHistoryLimit: 10
       test: false
@@ -44,9 +55,9 @@ objects:
                 claimName: "${NAME}-${APP_GROUP}-${TAG_NAME}-data"
           containers:
             - name: "${NAME}-${APP_GROUP}-${TAG_NAME}"
-              image: "image-registry.openshift-image-registry.svc:5000/openshift/postgresql:12"
+              image: " "
               ports:
-                - containerPort: 5433
+                - containerPort: 5432
                   protocol: TCP
               env:
                 - name: POSTGRESQL_DATABASE
@@ -69,18 +80,18 @@ objects:
                   memory: "${MEMORY_LIMIT}"
               volumeMounts:
                 - name: "${NAME}-${APP_GROUP}-${TAG_NAME}-volume"
-                  mountPath: "/var/lib/pgsql/data/limesurvey"
+                  mountPath: "/var/lib/pgsql/data"
               livenessProbe:
                 initialDelaySeconds: 30
                 tcpSocket:
-                  port: 5433
+                  port: 5432
                 timeoutSeconds: 1
               readinessProbe:
                 exec:
                   command:
                     - "/bin/bash"
                     - "-c"
-                    - pg_isready -h localhost -p 5433
+                    - pg_isready -h localhost -p 5432
                 initialDelaySeconds: 5
                 timeoutSeconds: 1
                 periodSeconds: 10
@@ -142,8 +153,8 @@ objects:
       ports:
         - name: "${NAME}-${APP_GROUP}-${TAG_NAME}"
           protocol: TCP
-          port: 5433
-          targetPort: 5433
+          port: 5432
+          targetPort: 5432
       selector:
         app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
         deploymentconfig: "${NAME}-${APP_GROUP}-${TAG_NAME}"

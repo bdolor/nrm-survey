@@ -2,127 +2,19 @@
 kind: Template
 apiVersion: template.openshift.io/v1
 metadata:
-  name: nrmlimesurvey-app-dc
-parameters:
-  - description: The OpenShift Namespace where the ImageStream resides.
-    displayName: Namespace
-    name: IS_NAMESPACE
-    value: ccc866-tools
-  - description: The OpenShift ImageStream name.
-    displayName: Image Stream
-    name: IS_NAME
-    value: limesurvey-bcgov
-  - description: Version of LimeSurvey image to be used (e.g. v.3.16).
-    displayName: Version of LimeSurvey
-    name: IS_VERSION
-    value: 5.3.21
-  - description: The short-name of the Survey Service, lower-case with hyphen.
-    displayName: LimeSurvey Acronym
-    name: SURVEY_NAME
-    required: true
-    value: nrm
-  - description: The disk space reserved for LimeSurvey uploads.
-    displayName: Upload Folder size
-    name: UPLOAD_FOLDER_CAPACITY
-    value: 1Gi
-  - description: The account name for the default LimeSurvey Administrator.
-    displayName: Administrator Account Name
-    name: ADMIN_USER
-    value: admin
-  - description: The descriptive name for the default LimeSurvey Administrator.
-    displayName: Administrator Display Name
-    name: ADMIN_NAME
-    value: Administrator
-  - description: Password for the default LimeSurvey Administrator.
-    displayName: Administrator Password
-    from: "[a-zA-Z0-9]{16}"
-    generate: expression
-    name: ADMIN_PASSWORD
-    required: true
-  - description: The email address for the default LimeSurvey Administrator.
-    displayName: Administrator Email Address
-    name: ADMIN_EMAIL
-    required: true
-  - description: The type of relational database (pgsql / mysql ); currently only pgsql is supported
-    displayName: Database Type
-    name: DB_TYPE
-    value: pgsql
-  - name: CPU_LIMIT
-    value: 200m
-  - name: MEMORY_LIMIT
-    value: 512Mi
-  - name: CPU_REQUEST
-    value: 50m
-  - name: MEMORY_REQUEST
-    value: 200Mi
-  - name: REPLICA_MIN
-    value: "2"
-  - name: REPLICA_MAX
-    value: "3"
+  annotations:
+    description: Deployment template for a PostgreSQL server with persistent storage.
+    tags: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+  name: "${NAME}-deployment"
+
 objects:
-  - kind: Secret
-    apiVersion: v1
-    metadata:
-      name: "${SURVEY_NAME}limesurvey-app"
-      labels:
-        app: "${SURVEY_NAME}limesurvey"
-      annotations:
-        description: Application Administrator credentials and name.
-        template.openshift.io/expose-admin_username: "{.data['admin-user']}"
-        template.openshift.io/expose-admin_name: "{.data['admin-name']}"
-        template.openshift.io/expose-admin_password: "{.data['admin-password']}"
-        template.openshift.io/expose-admin_email: "{.data['admin-email']}"
-    stringData:
-      admin-user: "${ADMIN_USER}"
-      admin-name: "${ADMIN_NAME}"
-      admin-password: "${ADMIN_PASSWORD}"
-      admin-email: "${ADMIN_EMAIL}"
-  - kind: PersistentVolumeClaim
-    apiVersion: v1
-    metadata:
-      name: "${SURVEY_NAME}limesurvey-app-upload"
-      labels:
-        app: "${SURVEY_NAME}limesurvey"
-    spec:
-      accessModes:
-        - ReadWriteMany
-      resources:
-        requests:
-          storage: "${UPLOAD_FOLDER_CAPACITY}"
-      storageClassName: netapp-file-standard
-  - kind: PersistentVolumeClaim
-    apiVersion: v1
-    metadata:
-      name: "${SURVEY_NAME}limesurvey-app-config"
-      labels:
-        app: "${SURVEY_NAME}limesurvey"
-    spec:
-      accessModes:
-        - ReadWriteMany
-      resources:
-        requests:
-          storage: 128Mi
-      storageClassName: netapp-file-standard
-  - kind: PersistentVolumeClaim
-    apiVersion: v1
-    metadata:
-      name: "${SURVEY_NAME}limesurvey-app-plugins"
-      labels:
-        app: "${SURVEY_NAME}limesurvey"
-    spec:
-      accessModes:
-        - ReadWriteMany
-      resources:
-        requests:
-          storage: 128Mi
-      storageClassName: netapp-file-standard
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
-      name: "${SURVEY_NAME}limesurvey-app"
+      name:  "${NAME}-${APP_GROUP}-${TAG_NAME}"
       generation: 1
       labels:
-        app: "${SURVEY_NAME}limesurvey"
+        app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
       annotations: {}
     spec:
       strategy:
@@ -141,7 +33,7 @@ objects:
           imageChangeParams:
             automatic: true
             containerNames:
-              - "${SURVEY_NAME}limesurvey-app"
+              - "${NAME}-${APP_GROUP}-${TAG_NAME}"
             from:
               kind: ImageStreamTag
               namespace: "${IS_NAMESPACE}"
@@ -150,27 +42,27 @@ objects:
       revisionHistoryLimit: 10
       test: false
       selector:
-        app: "${SURVEY_NAME}limesurvey"
-        deploymentconfig: "${SURVEY_NAME}limesurvey-app"
+        app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+        deploymentconfig: "${NAME}-${APP_GROUP}-${TAG_NAME}"
       template:
         metadata:
           labels:
-            app: "${SURVEY_NAME}limesurvey"
-            deploymentconfig: "${SURVEY_NAME}limesurvey-app"
+            app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+            deploymentconfig: "${NAME}-${APP_GROUP}-${TAG_NAME}"
           annotations: {}
         spec:
           volumes:
-            - name: "${SURVEY_NAME}limesurvey-app-upload"
+            - name: "${NAME}-${APP_GROUP}-${TAG_NAME}-upload"
               persistentVolumeClaim:
-                claimName: "${SURVEY_NAME}limesurvey-app-upload"
-            - name: "${SURVEY_NAME}limesurvey-app-config"
+                claimName: "${NAME}-${APP_GROUP}-${TAG_NAME}-upload"
+            - name: "${NAME}-${APP_GROUP}-${TAG_NAME}-config"
               persistentVolumeClaim:
-                claimName: "${SURVEY_NAME}limesurvey-app-config"
-            - name: "${SURVEY_NAME}limesurvey-app-plugins"
+                claimName: "${NAME}-${APP_GROUP}-${TAG_NAME}-config"
+            - name: "${NAME}-${APP_GROUP}-${TAG_NAME}-plugins"
               persistentVolumeClaim:
-                claimName: "${SURVEY_NAME}limesurvey-app-plugins"
+                claimName: "${NAME}-${APP_GROUP}-${TAG_NAME}-plugins"
           containers:
-            - name: "${SURVEY_NAME}limesurvey-app"
+            - name:  "${NAME}-${APP_GROUP}-${TAG_NAME}"
               image: " "
               command: ["/bin/sh"]
               args: ["-c", "docker-entrypoint.sh apache2-foreground"]
@@ -183,42 +75,42 @@ objects:
                 - name: ADMIN_USER
                   valueFrom:
                     secretKeyRef:
-                      name: "${SURVEY_NAME}limesurvey-app"
+                      name:  "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
                       key: admin-user
                 - name: ADMIN_NAME
                   valueFrom:
                     secretKeyRef:
-                      name: "${SURVEY_NAME}limesurvey-app"
+                      name:  "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
                       key: admin-name
                 - name: ADMIN_PASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name: "${SURVEY_NAME}limesurvey-app"
+                      name:  "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
                       key: admin-password
                 - name: ADMIN_EMAIL
                   valueFrom:
                     secretKeyRef:
-                      name: "${SURVEY_NAME}limesurvey-app"
+                      name:  "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
                       key: admin-email
                 - name: DB_TYPE
                   value: "${DB_TYPE}"
                 - name: POSTGRESQL_USERNAME
                   valueFrom:
                     secretKeyRef:
-                      name: "${SURVEY_NAME}limesurvey-postgresql"
+                      name: "postgresql-${APP_GROUP}-${TAG_NAME}-secret"
                       key: database-user
                 - name: POSTGRESQL_PASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name: "${SURVEY_NAME}limesurvey-postgresql"
+                      name: "postgresql-${APP_GROUP}-${TAG_NAME}-secret"
                       key: database-password
                 - name: POSTGRESQL_DB_NAME
                   valueFrom:
                     secretKeyRef:
-                      name: "${SURVEY_NAME}limesurvey-postgresql"
+                      name: "postgresql-${APP_GROUP}-${TAG_NAME}-secret"
                       key: database-name
                 - name: POSTGRESQL_DB_HOST
-                  value: "${SURVEY_NAME}limesurvey-postgresql"
+                  value: "postgresql-${APP_GROUP}-${TAG_NAME}"
                 - name: POSTGRESQL_PORT
                   value: "5432"
               resources:
@@ -229,11 +121,11 @@ objects:
                   cpu: "${CPU_REQUEST}"
                   memory: "${MEMORY_REQUEST}"
               volumeMounts:
-                - name: "${SURVEY_NAME}limesurvey-app-upload"
+                - name: "${NAME}-${APP_GROUP}-${TAG_NAME}-upload"
                   mountPath: "/var/www/html/upload"
-                - name: "${SURVEY_NAME}limesurvey-app-config"
+                - name: "${NAME}-${APP_GROUP}-${TAG_NAME}-config"
                   mountPath: "/var/www/html/config"
-                - name: "${SURVEY_NAME}limesurvey-app-plugins"
+                - name: "${NAME}-${APP_GROUP}-${TAG_NAME}-plugins"
                   mountPath: "/var/www/html/plugins"
               livenessProbe:
                 httpGet:
@@ -263,26 +155,28 @@ objects:
           dnsPolicy: ClusterFirst
           securityContext: {}
           schedulerName: default-scheduler
+
   - apiVersion: autoscaling/v1
     kind: HorizontalPodAutoscaler
     metadata:
-      name: "${SURVEY_NAME}limesurvey-app"
+      name:  "${NAME}-${APP_GROUP}-${TAG_NAME}"
       labels:
-        app: "${SURVEY_NAME}limesurvey"
+        app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
     spec:
       maxReplicas: "${{REPLICA_MAX}}"
       minReplicas: "${{REPLICA_MIN}}"
       scaleTargetRef:
         apiVersion: apps.openshift.io/v1
         kind: DeploymentConfig
-        name: "${SURVEY_NAME}limesurvey-app"
+        name:  "${NAME}-${APP_GROUP}-${TAG_NAME}"
       targetCPUUtilizationPercentage: 95
+
   - kind: Service
     apiVersion: v1
     metadata:
-      name: "${SURVEY_NAME}limesurvey-app"
+      name:  "${NAME}-${APP_GROUP}-${TAG_NAME}"
       labels:
-        app: "${SURVEY_NAME}limesurvey"
+        app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
       annotations:
         description: Exposes and load balances the application pods
     spec:
@@ -292,27 +186,181 @@ objects:
           port: 8080
           targetPort: 8080
       selector:
-        app: "${SURVEY_NAME}limesurvey"
-        deploymentconfig: "${SURVEY_NAME}limesurvey-app"
+        app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+        deploymentconfig: "${NAME}-${APP_GROUP}-${TAG_NAME}"
       type: ClusterIP
       sessionAffinity: None
     status:
       loadBalancer: {}
+
   - kind: Route
     apiVersion: v1
     metadata:
-      name: "${SURVEY_NAME}limesurvey-app"
+      name:  "${NAME}-${APP_GROUP}-${TAG_NAME}"
       creationTimestamp:
       labels:
-        app: "${SURVEY_NAME}limesurvey"
+        app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
     spec:
-      host: "${SURVEY_NAME}limesurvey.apps.silver.devops.gov.bc.ca"
+      host: "${SURVEY_NAME}-${APP_GROUP}-${TAG_NAME}.apps.silver.devops.gov.bc.ca"
       to:
         kind: Service
-        name: "${SURVEY_NAME}limesurvey-app"
+        name:  "${NAME}-${APP_GROUP}-${TAG_NAME}"
         weight: 100
       port:
         targetPort: web
       tls:
         termination: edge
       wildcardPolicy: None
+
+  - kind: Secret
+    apiVersion: v1
+    metadata:
+      name: "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
+      labels:
+        app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+        app-group: "${APP_GROUP}"
+        template: "${NAME}-deploy"
+      annotations:
+        description: Application Administrator credentials and name.
+        template.openshift.io/expose-admin_username: "{.data['admin-user']}"
+        template.openshift.io/expose-admin_name: "{.data['admin-name']}"
+        template.openshift.io/expose-admin_password: "{.data['admin-password']}"
+        template.openshift.io/expose-admin_email: "{.data['admin-email']}"
+    stringData:
+      admin-user: "${ADMIN_USER}"
+      admin-name: "${ADMIN_NAME}"
+      admin-password: "${ADMIN_PASSWORD}"
+      admin-email: "${ADMIN_EMAIL}"
+
+  - kind: PersistentVolumeClaim
+    apiVersion: v1
+    metadata:
+      name: "${NAME}-${APP_GROUP}-${TAG_NAME}-upload"
+      labels:
+        app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+    spec:
+      accessModes:
+        - ReadWriteMany
+      resources:
+        requests:
+          storage: "${UPLOAD_FOLDER_CAPACITY}"
+      storageClassName: netapp-file-standard
+
+  - kind: PersistentVolumeClaim
+    apiVersion: v1
+    metadata:
+      name: "${NAME}-${APP_GROUP}-${TAG_NAME}-config"
+      labels:
+        app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+    spec:
+      accessModes:
+        - ReadWriteMany
+      resources:
+        requests:
+          storage: 128Mi
+      storageClassName: netapp-file-standard
+
+  - kind: PersistentVolumeClaim
+    apiVersion: v1
+    metadata:
+      name: "${NAME}-${APP_GROUP}-${TAG_NAME}-plugins"
+      labels:
+        app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+    spec:
+      accessModes:
+        - ReadWriteMany
+      resources:
+        requests:
+          storage: 128Mi
+      storageClassName: netapp-file-standard
+
+parameters:
+  - description: The OpenShift Namespace where the ImageStream resides.
+    displayName: Namespace
+    name: IS_NAMESPACE
+    value: ccc866-tools
+  
+  - description: The OpenShift ImageStream name.
+    displayName: Image Stream
+    name: IS_NAME
+    required: true
+    value: limesurvey
+  
+  - description: Version of LimeSurvey image to be used (e.g. v.3.16).
+    displayName: Version of LimeSurvey
+    name: IS_VERSION
+    value: 5.3.21
+
+  - description: The Application name.
+    displayName: Application Name
+    name: NAME
+    required: true
+    value: app
+
+  - description: A name that helps group objects related to the same app
+    displayName: App Group
+    name: APP_GROUP
+    required: true
+    value: limesurvey
+
+  - name: TAG_NAME
+    displayName: Environment TAG name
+    required: true
+    value: dev
+
+  - description: The short-name of the Survey Service, lower-case with hyphen.
+    displayName: LimeSurvey Acronym
+    name: SURVEY_NAME
+    required: true
+    value: sdd
+
+  - description: The disk space reserved for LimeSurvey uploads.
+    displayName: Upload Folder size
+    name: UPLOAD_FOLDER_CAPACITY
+    value: 1Gi
+
+  - description: The account name for the default LimeSurvey Administrator.
+    displayName: Administrator Account Name
+    name: ADMIN_USER
+    value: admin
+
+  - description: The descriptive name for the default LimeSurvey Administrator.
+    displayName: Administrator Display Name
+    name: ADMIN_NAME
+    value: Administrator
+
+  - description: Password for the default LimeSurvey Administrator.
+    displayName: Administrator Password
+    from: "[a-zA-Z0-9]{16}"
+    generate: expression
+    name: ADMIN_PASSWORD
+    required: true
+
+  - description: The email address for the default LimeSurvey Administrator.
+    displayName: Administrator Email Address
+    name: ADMIN_EMAIL
+    required: true
+    value: digitalmarketplace@gov.bc.ca
+
+  - description: The type of relational database (pgsql/mysql); currently only pgsql is supported
+    displayName: Database Type
+    name: DB_TYPE
+    value: pgsql
+
+  - name: CPU_LIMIT
+    value: 200m
+
+  - name: MEMORY_LIMIT
+    value: 512Mi
+
+  - name: CPU_REQUEST
+    value: 50m
+
+  - name: MEMORY_REQUEST
+    value: 200Mi
+
+  - name: REPLICA_MIN
+    value: "2"
+
+  - name: REPLICA_MAX
+    value: "3"
